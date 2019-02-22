@@ -15,10 +15,10 @@ def request_print(bot, update):
     file_id = update.message.document.file_id
     file_name = update.message.document.file_name
     file_link = bot.get_file(file_id)
-    file_link.download(file_name)
+    file_link.download("to_print")
     print("Downloaded file %s" % file_name)
     print("Printing file %s" % file_name)
-    os.system("lpr ./%s" % file_name)
+    os.system("lpr ./to_print" % file_name)
 
 
 updater = Updater(token)
