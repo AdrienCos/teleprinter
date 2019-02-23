@@ -18,17 +18,23 @@ Run the python script:
     pipenv run python main.py
 ```
 
-From Telegram, send a file to the bot. You will see the following messages in your terminal:
+From Telegram, send a file to the bot. You will see the following message in your terminal:
 ```
-    Downloaded file file.txt
-    Printing file file.txt
+    If you want me to print this file, reply to it with the /print command
 ```
 
-where `file.txt` is the name of file you sent. It will then print the file using the [`lpr`](http://man7.org/linux/man-pages/man1/lpr.1.html) command.
+To confirm the printing request, reply to your message with the `/print` command. By default, the print job will print one double-sided copy. You can change that by adding arguments to you command:
+* `n copies` will print `n` copies of the file
+* `simple sided` or `single sided` will print single sided
+
+You will then receive a answer from the bot saying: 
+```
+    Printing file file.ext
+```
+
+where `file.ext` is the name of file you sent. It will then print the file using the [`lp`](https://linux.die.net/man/1/lp) command.
 
 ## Todo
 
-* Add a confirmation to the printing request, to make sure we do not print by mistake
-* Add an option to specify the number of copies desired
 * Remove the document once it has been printed
-* Add support for image files 
+* Add a way to cancel a printing job
