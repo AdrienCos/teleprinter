@@ -12,6 +12,8 @@ valid_types = [
     "text/plain"
 ]
 
+jobs = {}
+
 def get_lp_command(args):
     # Double or single sided
     duplex = "-o sides=two-sided-long-edge"
@@ -25,7 +27,6 @@ def get_lp_command(args):
     # Generate the lp command
     command = "lp %s %s" % (copies, duplex)
     return command
-
 
 
 def request_print(bot, update, args):
@@ -44,8 +45,28 @@ def request_print(bot, update, args):
         command = get_lp_command(args)
         # Print the user
         reply = "Printing file %s" % (file_name)
-        update.message.reply_text(reply, quote=True)
-        os.system("%s ./to_print" % command)
+        msg = update.message.reply_text(reply, quote=True)
+        msg_id = msg.message_id
+        # Print the file and store the job ID in the jobs dict
+        lp_response = os.popen("%s ./to_print" % command).read()
+        job_id = lp_response.split()[3]
+        jobs[msg_id] = job_id
+
+def cancel_print(bot, update):
+    msg_id = update.message.reply_to_message.message_id
+    # Check if the message is linked to a print job
+    try:
+        job_id = jobs[msg_id]
+        exit_code = os.system("cancel %s 2>/dev/null" % job_id)
+        # Check if the cancel worked
+        if exit_code == 0:
+            update.message.reply_text("Sucessfully cancelled job")
+        else:
+            update.message.reply_text("Failed to cancel job")
+        # Remove the job from memory
+        del jobs[msg_id]
+    except:
+        update.message.reply_text("No active job is linked to this message")
 
 def recognize_file(bot, update):
     # Notify the user that we can print this file
@@ -54,13 +75,22 @@ def recognize_file(bot, update):
         reply = "If you want me to print this file, reply to it with the /print command"
         update.message.reply_text(reply, quote=True)
 
+def print_message(bot, update):
+    print(update.message)
+    sent = update.message.reply_text("Yes hello")
+    print(sent)
+
 # Start the bot
 updater = Updater(token)
 
+# Debug handler
+updater.dispatcher.add_handler(MessageHandler(Filters.text, print_message))
 # Handler to notify the user we can print their document
 updater.dispatcher.add_handler(MessageHandler(Filters.document, recognize_file))
 # Handler to execute a print command
 updater.dispatcher.add_handler(CommandHandler('print', request_print, pass_args=True))
+# Handler to cancel print jobs
+updater.dispatcher.add_handler(CommandHandler('cancel', cancel_print))
 
 updater.start_polling()
 updater.idle()
